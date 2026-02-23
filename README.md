@@ -1,6 +1,6 @@
 # SillyTavern User Scripts
 
-A [SillyTavern](https://github.com/SillyTavern/SillyTavern) extension that lets you write, manage, and persist custom JavaScript snippets that run automatically on every page load without touching any files after initial setup. 
+A [SillyTavern](https://github.com/SillyTavern/SillyTavern) extension that lets you write, manage, and persist custom JavaScript snippets that run automatically on every page load — without touching any files after initial setup.
 
 ## Features
 
@@ -33,7 +33,7 @@ Open the **Extensions** panel → **User Scripts** drawer.
 - Hit **▶ Run now** to test it immediately
 - Click **Save** — it will now run automatically on every load
 
-To move scripts between devices or browsers, use the **Export** and **Import** buttons.
+To move scripts between machines or browsers, use the **Export** and **Import** buttons.
 
 ## Example Script
 
@@ -52,9 +52,10 @@ document.addEventListener('click', function(e) {
 
 ## Notes
 
-- Scripts are stored in your browser's `localStorage`. Clearing browser data will remove them — use Export to back them up first.
+- Scripts are stored in SillyTavern's `extensionSettings`, which is persisted server-side. This means scripts automatically sync across all devices and browsers connecting to the same ST instance.
+- Use Export/Import to move scripts between separate ST installations.
 - Scripts run in the page's JS context and have full access to the ST environment. Be careful with scripts from untrusted sources.
 
 ## License
 
-MIT. Do whatever you want with it.
+MIT — do whatever you want with it.
