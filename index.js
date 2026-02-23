@@ -21,7 +21,6 @@ function getSettings() {
     if (!extensionSettings[MODULE_NAME]) {
         extensionSettings[MODULE_NAME] = structuredClone(defaultSettings);
     }
-    // Ensure all default keys exist (forward compatibility after updates)
     for (const key of Object.keys(defaultSettings)) {
         if (!Object.hasOwn(extensionSettings[MODULE_NAME], key)) {
             extensionSettings[MODULE_NAME][key] = defaultSettings[key];
@@ -40,25 +39,25 @@ function saveScripts(scripts) {
     saveSettingsDebounced();
 }
 
-// ---------- Run a single script ----------
+// ---------- Run scripts ----------
 
+// Runs a script regardless of flags — for manual "Run now" use
 function runScript(script) {
-    if (!script.enabled) return;
     try {
         // eslint-disable-next-line no-new-func
-        const fn = new Function(script.code);
-        fn();
+        new Function(script.code)();
         console.log(`[User Scripts] ✓ "${script.name}" ran successfully`);
     } catch (err) {
         console.error(`[User Scripts] ✗ "${script.name}" threw an error:`, err);
     }
 }
 
-// ---------- Run all enabled scripts on load ----------
-
+// Runs all scripts that are enabled AND marked as autoRun
 function runAllScripts() {
     const scripts = loadScripts();
-    scripts.forEach(runScript);
+    scripts
+        .filter(s => s.enabled && s.autoRun)
+        .forEach(runScript);
 }
 
 // ---------- Export / Import ----------
@@ -122,9 +121,13 @@ function buildUI() {
         <div id="us-editor" class="us-editor us-hidden">
             <div class="us-editor-header">
                 <input id="us-name-input" class="us-input" type="text" placeholder="Script name..." maxlength="60" />
-                <label class="us-toggle-wrap">
+                <label class="us-toggle-wrap" title="Allow this script to be run manually">
                     <input id="us-enabled-input" type="checkbox" checked />
                     <span>Enabled</span>
+                </label>
+                <label class="us-toggle-wrap" title="Run this script automatically on every page load">
+                    <input id="us-autorun-input" type="checkbox" />
+                    <span>Run on startup</span>
                 </label>
             </div>
             <input id="us-desc-input" class="us-input us-desc-input" type="text" placeholder="Description (optional)..." maxlength="120" />
@@ -170,6 +173,9 @@ function renderList() {
             <div class="us-item-text">
                 <span class="us-item-name">${escapeHtml(s.name || 'Untitled')}</span>
                 ${s.description ? `<span class="us-item-desc">${escapeHtml(s.description)}</span>` : ''}
+            </div>
+            <div class="us-item-badges">
+                ${s.autoRun ? '<span class="us-badge us-badge-autorun" title="Runs on startup">startup</span>' : ''}
             </div>
             <div class="us-item-actions">
                 <button class="us-btn us-btn-xs us-btn-secondary us-edit-btn" data-index="${i}">Edit</button>
@@ -224,7 +230,6 @@ function attachDragAndDrop() {
             scripts.splice(dropIndex, 0, moved);
             saveScripts(scripts);
 
-            // Keep editor pointing at the correct script after reorder
             if (editingIndex === dragSrcIndex) {
                 editingIndex = dropIndex;
             } else if (editingIndex !== null) {
@@ -240,7 +245,7 @@ function attachDragAndDrop() {
 
 // ---------- Editor state ----------
 
-let editingIndex = null; // null = new script
+let editingIndex = null;
 
 function openEditor(index = null) {
     const scripts = loadScripts();
@@ -251,17 +256,20 @@ function openEditor(index = null) {
     const descInput = document.getElementById('us-desc-input');
     const codeInput = document.getElementById('us-code-input');
     const enabledInput = document.getElementById('us-enabled-input');
+    const autoRunInput = document.getElementById('us-autorun-input');
 
     if (index !== null && scripts[index]) {
         nameInput.value = scripts[index].name || '';
         descInput.value = scripts[index].description || '';
         codeInput.value = scripts[index].code || '';
         enabledInput.checked = scripts[index].enabled !== false;
+        autoRunInput.checked = scripts[index].autoRun === true;
     } else {
         nameInput.value = '';
         descInput.value = '';
         codeInput.value = '';
         enabledInput.checked = true;
+        autoRunInput.checked = false;
     }
 
     editor.classList.remove('us-hidden');
@@ -281,13 +289,14 @@ function saveCurrentScript() {
     const description = document.getElementById('us-desc-input').value.trim();
     const code = document.getElementById('us-code-input').value;
     const enabled = document.getElementById('us-enabled-input').checked;
+    const autoRun = document.getElementById('us-autorun-input').checked;
 
     const scripts = loadScripts();
 
     if (editingIndex !== null && scripts[editingIndex]) {
-        scripts[editingIndex] = { name, description, code, enabled };
+        scripts[editingIndex] = { name, description, code, enabled, autoRun };
     } else {
-        scripts.push({ name, description, code, enabled });
+        scripts.push({ name, description, code, enabled, autoRun });
     }
 
     saveScripts(scripts);
@@ -339,7 +348,8 @@ function updateHint() {
     if (!hint) return;
     const scripts = loadScripts();
     const enabled = scripts.filter(s => s.enabled).length;
-    hint.textContent = `${scripts.length} script(s) — ${enabled} enabled`;
+    const autoRun = scripts.filter(s => s.enabled && s.autoRun).length;
+    hint.textContent = `${scripts.length} script(s) — ${enabled} enabled, ${autoRun} run on startup`;
 }
 
 // ---------- Wire up events (delegated) ----------
@@ -368,7 +378,6 @@ function attachEvents(container) {
         }
     });
 
-    // Toggle checkbox and import file input
     container.addEventListener('change', (e) => {
         if (e.target.classList.contains('us-toggle-checkbox')) {
             toggleScript(parseInt(e.target.dataset.index, 10));
@@ -384,11 +393,9 @@ function attachEvents(container) {
 // ---------- Register with SillyTavern ----------
 
 jQuery(async () => {
-    // 1. Initialize settings, then run all saved scripts
     getSettings();
     runAllScripts();
 
-    // 2. Add settings panel to ST's Extensions tab
     const settingsHtml = `
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
