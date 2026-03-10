@@ -10,6 +10,7 @@ A [SillyTavern](https://github.com/SillyTavern/SillyTavern) extension that lets 
 - **Drag to reorder** — execution order matters, so you control it
 - **Collections / folders** — organize scripts into grouped sections in the settings list
 - **Create empty collections** — make folders first, then drag scripts into them later
+- **Group on/off toggle** — enable or disable every script in a collection at once
 - **Descriptions** — add a short note to remind yourself what each script does
 - **Run now** — test a script instantly without reloading
 - **Export/Import** — back up your scripts to a `.json` file and restore them on any machine
@@ -36,7 +37,7 @@ Open the **Extensions** panel → **User Scripts** drawer.
 - Click **Save** — it will now run automatically on every load
 
 Scripts in the list are grouped by collection and each collection can be collapsed when you want a cleaner settings panel.
-Use **+ New Collection** to create an empty collection from the toolbar, drag collection headers to reorder the collections themselves, and drag scripts onto a collection header or empty collection area to move them there.
+Use **+ New Collection** to create an empty collection from the toolbar, drag collection headers to reorder the collections themselves, use the collection-level toggle to enable or disable a whole collection at once, and drag scripts onto a collection header or empty collection area to move them there.
 
 To move scripts between machines or browsers, use the **Export** and **Import** buttons.
 

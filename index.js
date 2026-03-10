@@ -288,9 +288,19 @@ function renderScriptItem(script, index) {
 
 const collapsedGroups = new Set();
 
+function getGroupToggleState(group) {
+    const enabledCount = group.items.filter(({ script }) => script.enabled).length;
+    return {
+        checked: group.items.length > 0 && enabledCount === group.items.length,
+        mixed: enabledCount > 0 && enabledCount < group.items.length,
+        disabled: group.items.length === 0,
+    };
+}
+
 function renderGroupSection(group, showHeader) {
     const isCollapsed = collapsedGroups.has(group.key);
     const itemsMarkup = group.items.map(({ script, index }) => renderScriptItem(script, index)).join('');
+    const toggleState = getGroupToggleState(group);
 
     if (!showHeader) {
         return itemsMarkup;
@@ -298,22 +308,45 @@ function renderGroupSection(group, showHeader) {
 
     return `
         <div class="us-group ${isCollapsed ? 'us-group-collapsed' : ''}" data-group-key="${escapeAttribute(group.key)}">
-            <button
+            <div
                 class="us-group-header ${group.key ? 'us-group-header-draggable' : ''}"
-                type="button"
                 data-group-key="${escapeAttribute(group.key)}"
                 ${group.key ? 'draggable="true" title="Click to collapse or drag to reorder collection"' : ''}
             >
+                <button
+                    class="us-group-collapse-btn"
+                    type="button"
+                    data-group-key="${escapeAttribute(group.key)}"
+                    title="${group.key ? 'Click to collapse or drag the header to reorder collection' : 'Click to collapse'}"
+                >
                 ${group.key ? '<span class="us-group-drag-handle" title="Drag to reorder collection">⠿</span>' : ''}
                 <span class="us-group-chevron">${isCollapsed ? '▸' : '▾'}</span>
                 <span class="us-group-title">${escapeHtml(group.label)}</span>
                 <span class="us-group-count">${group.items.length}</span>
-            </button>
+                </button>
+                <label class="us-group-toggle" title="Enable or disable every script in this collection">
+                    <input
+                        type="checkbox"
+                        class="us-group-toggle-checkbox"
+                        data-group-key="${escapeAttribute(group.key)}"
+                        data-group-mixed="${toggleState.mixed ? 'true' : 'false'}"
+                        ${toggleState.checked ? 'checked' : ''}
+                        ${toggleState.disabled ? 'disabled' : ''}
+                    />
+                    <span>Enabled</span>
+                </label>
+            </div>
             <div class="us-group-items" data-group-key="${escapeAttribute(group.key)}">
                 ${itemsMarkup || `<div class="us-group-empty" data-group-key="${escapeAttribute(group.key)}">Drop scripts here</div>`}
             </div>
         </div>
     `;
+}
+
+function syncGroupToggleStates() {
+    document.querySelectorAll('.us-group-toggle-checkbox').forEach(checkbox => {
+        checkbox.indeterminate = checkbox.dataset.groupMixed === 'true';
+    });
 }
 
 function refreshGroupOptions() {
@@ -341,6 +374,7 @@ function renderList() {
     const showHeaders = groups.length !== 1 || groups[0]?.key !== '';
     list.innerHTML = groups.map(group => renderGroupSection(group, showHeaders)).join('');
 
+    syncGroupToggleStates();
     attachDragAndDrop();
     updateHint();
 }
@@ -739,6 +773,27 @@ function toggleScript(index) {
     renderList();
 }
 
+function setGroupEnabled(groupKey, enabled) {
+    const normalizedGroupKey = normalizeGroupName(groupKey);
+    const scripts = loadScripts();
+    let changed = false;
+
+    scripts.forEach(script => {
+        if (normalizeGroupName(script.group) !== normalizedGroupKey) return;
+        if (script.enabled === enabled) return;
+        script.enabled = enabled;
+        changed = true;
+    });
+
+    if (!changed) {
+        renderList();
+        return;
+    }
+
+    saveScripts(scripts);
+    renderList();
+}
+
 function deleteScript(index) {
     const scripts = loadScripts();
     const name = scripts[index]?.name || 'this script';
@@ -771,10 +826,10 @@ function attachEvents(container) {
         if (e.target.id === 'us-cancel-btn') { closeEditor(); return; }
         if (e.target.id === 'us-export-btn') { exportScripts(); return; }
 
-        const groupHeader = e.target.closest('.us-group-header');
-        if (groupHeader) {
+        const groupCollapseButton = e.target.closest('.us-group-collapse-btn');
+        if (groupCollapseButton) {
             if (Date.now() - lastDragDropAt < 250) return;
-            const groupKey = groupHeader.dataset.groupKey || '';
+            const groupKey = groupCollapseButton.dataset.groupKey || '';
             if (collapsedGroups.has(groupKey)) {
                 collapsedGroups.delete(groupKey);
             } else {
@@ -803,6 +858,10 @@ function attachEvents(container) {
     container.addEventListener('change', (e) => {
         if (e.target.classList.contains('us-toggle-checkbox')) {
             toggleScript(parseInt(e.target.dataset.index, 10));
+            return;
+        }
+        if (e.target.classList.contains('us-group-toggle-checkbox')) {
+            setGroupEnabled(e.target.dataset.groupKey || '', e.target.checked);
             return;
         }
         if (e.target.id === 'us-import-input' && e.target.files[0]) {
