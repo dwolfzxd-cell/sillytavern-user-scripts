@@ -51,6 +51,107 @@
     padding: 8px 4px;
 }
 
+.us-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.us-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    color: inherit;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 0.82em;
+    text-align: left;
+    transition: background 0.15s;
+}
+.us-group-header:hover { background: rgba(255,255,255,0.1); }
+
+.us-group-header-draggable {
+    cursor: grab;
+}
+
+.us-group-header-draggable:active {
+    cursor: grabbing;
+}
+
+.us-group-drag-handle {
+    opacity: 0.45;
+    flex-shrink: 0;
+}
+
+.us-group-header:hover .us-group-drag-handle,
+.us-group-header-draggable:focus-visible .us-group-drag-handle {
+    opacity: 0.8;
+}
+
+.us-group.us-group-drop-target .us-group-header {
+    background: rgba(52, 152, 219, 0.18);
+    outline: 1px dashed rgba(93, 173, 226, 0.65);
+}
+
+.us-group.us-group-dragging .us-group-header {
+    opacity: 0.45;
+}
+
+.us-group.us-group-reorder-before .us-group-header {
+    box-shadow: inset 0 3px 0 rgba(93, 173, 226, 0.9);
+}
+
+.us-group.us-group-reorder-after .us-group-header {
+    box-shadow: inset 0 -3px 0 rgba(93, 173, 226, 0.9);
+}
+
+.us-group-chevron {
+    width: 10px;
+    opacity: 0.75;
+    flex-shrink: 0;
+}
+
+.us-group-title {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.us-group-count {
+    margin-left: auto;
+    opacity: 0.6;
+    font-size: 0.92em;
+}
+
+.us-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.us-group-empty {
+    padding: 10px 12px;
+    border: 1px dashed rgba(255,255,255,0.18);
+    border-radius: 6px;
+    font-size: 0.78em;
+    opacity: 0.6;
+    background: rgba(255,255,255,0.03);
+}
+
+.us-group.us-group-drop-target .us-group-empty {
+    border-color: rgba(93, 173, 226, 0.7);
+    background: rgba(52, 152, 219, 0.12);
+    opacity: 0.95;
+}
+
+.us-group-collapsed .us-group-items {
+    display: none;
+}
+
 .us-item {
     display: flex;
     align-items: center;
@@ -183,6 +284,10 @@
     width: 100%;
     font-size: 0.83em;
     opacity: 0.85;
+}
+
+.us-group-input {
+    max-width: 220px;
 }
 
 .us-toggle-wrap {

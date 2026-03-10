@@ -8,6 +8,8 @@ A [SillyTavern](https://github.com/SillyTavern/SillyTavern) extension that lets 
 - **Auto-runs on load** — enabled scripts execute every time ST starts
 - **Enable/disable** scripts individually with a single click
 - **Drag to reorder** — execution order matters, so you control it
+- **Collections / folders** — organize scripts into grouped sections in the settings list
+- **Create empty collections** — make folders first, then drag scripts into them later
 - **Descriptions** — add a short note to remind yourself what each script does
 - **Run now** — test a script instantly without reloading
 - **Export/Import** — back up your scripts to a `.json` file and restore them on any machine
@@ -29,9 +31,12 @@ That's it. Your scripts are stored in `localStorage` and survive page refreshes.
 Open the **Extensions** panel → **User Scripts** drawer.
 
 - Click **+ New Script** to create a script
-- Give it a name, an optional description, and paste your JS
+- Give it a name, an optional collection, an optional description, and paste your JS
 - Hit **▶ Run now** to test it immediately
 - Click **Save** — it will now run automatically on every load
+
+Scripts in the list are grouped by collection and each collection can be collapsed when you want a cleaner settings panel.
+Use **+ New Collection** to create an empty collection from the toolbar, drag collection headers to reorder the collections themselves, and drag scripts onto a collection header or empty collection area to move them there.
 
 To move scripts between machines or browsers, use the **Export** and **Import** buttons.
 
